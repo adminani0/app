@@ -1,0 +1,37 @@
+@Library('bk') _
+pipeline {
+    agent any
+
+    stages {
+        stage('git checkout') {
+             when {
+               expression {
+                   params.branchname == "develop"
+              }
+           }
+            steps {
+                git branch: "${params.branchname}", credentialsId: 'github tokens', url: 'https://github.com/adminani0/hr-api'
+            }
+        }    
+        stage('maven build') {
+             when {
+               expression {
+                   params.branchname == "develop"
+              }
+           }
+            steps {
+               sh 'mvn clean package'
+            }
+        }
+        stage('tomcat deploy - dev') {
+            steps {
+              tomcatDeploy("ec2-user","172.31.32.20","tomcat-dev")
+            }
+        }
+    }
+post {
+   always {
+      cleanWs()
+     }
+  }
+}
